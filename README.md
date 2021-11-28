@@ -1,8 +1,8 @@
-# Robin-Hood-Hash
+# Robinhood-Hash
 dictionary.txt taken from https://github.com/dwyl/english-words/blob/master/words.txt
 
 This program is an exercise intended to compare the run times of unordered_map
-and robin hood hashing.
+and robinhood hashing.
 
 # Hash Function
 My intention with this project was to hash a dictionary, as it contains a large

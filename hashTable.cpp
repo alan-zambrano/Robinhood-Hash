@@ -11,7 +11,8 @@
  * following numbers because we're always doubling the size of the table.
  * taken from https://www.mathsisfun.com/numbers/prime-number-lists.html
  */
-HashTable::HashTable(){
+template <typename T>
+HashTable<T>::HashTable(){
 	primesList = {
 		67,     127,    257,
 		503,    1009,   2003,
@@ -19,7 +20,7 @@ HashTable::HashTable(){
 		32003,  64007,  128021,
 		256019, 512009, 999983};
 	currSizeIter = primesList.begin();
-	table.resize(*(currSizeIter), (hashedObj){"", "", -1});
+	table.resize(*(currSizeIter), (hashedObj<T>){"", T(), -1});
 }
 
 /*
@@ -27,7 +28,8 @@ HashTable::HashTable(){
  * the next closest prime number from @primeslist. The largest the length will
  * actually be is very close to 2*@length.
  */
-HashTable::HashTable(unsigned int length){
+template <typename T>
+HashTable<T>::HashTable(size_t length){
 	primesList = {
 		67,     127,    257,
 		503,    1009,   2003,
@@ -39,7 +41,7 @@ HashTable::HashTable(unsigned int length){
 		(*currSizeIter) < length;
 		currSizeIter++){}
 	std::cout << "initialized to size " << (*currSizeIter) << std::endl;
-	table.resize(*(currSizeIter), (hashedObj){"", "", -1});
+	table.resize(*(currSizeIter), (hashedObj<T>){"", T(), -1});
 }
 
 
@@ -51,7 +53,8 @@ HashTable::HashTable(unsigned int length){
  *Returns:
  * generated key.
  */
-unsigned int HashTable::keygen(std::string p){
+template <typename T>
+unsigned int HashTable<T>::keygen(std::string p){
     unsigned int h = 0;
     int i;
     int len = p.length();
@@ -78,7 +81,8 @@ unsigned int HashTable::keygen(std::string p){
  * ERR_TABLE_MAX_SIZE- hash table has exceeded size limits. Table is unchanged
  * SUCCESS_HASH- New table has been created and all elements rehashed
  */
-int HashTable::rehash(){
+template <typename T>
+int HashTable<T>::rehash(){
 	//moves the iterator over to get the next prime == 2 * current table size
 	if(currSizeIter == primesList.end() ||
 		*currSizeIter > MAX_TABLE_SIZE ||
@@ -88,12 +92,12 @@ int HashTable::rehash(){
 		return ERR_TABLE_MAX_SIZE;
 	}
 	std::cout << "resizing to " << *currSizeIter << "..." << std::endl;
-	std::vector<hashedObj> tablecpy(*currSizeIter, (hashedObj){"","", -1});
+	std::vector<hashedObj<T>> tablecpy(*currSizeIter, (hashedObj<T>){"", T(), -1});
 	//swap here so we can use hashHelper because it uses @table not @tablecpy
 	swap(table, tablecpy);
 	numElems = 0;
-	for(std::vector<hashedObj>::iterator it = tablecpy.begin(); it != tablecpy.end(); ++it){
-		if(hashHelper((*it).key, (*it).val) != SUCCESS_HASH){
+	for(auto it : tablecpy){
+		if(hashHelper(it.key, it.val) != SUCCESS_HASH){
 			std::cerr << "Something went horribly wrong" << std::endl;
 			exit(0);
 		};
@@ -102,9 +106,7 @@ int HashTable::rehash(){
 }
 
 /*
- *Hashes @key @value pair to @table. Empty keys or values are not hashed
- * because it doesn't make sense to reserve empty space. An empty table could
- * be interpreted as full this way. Keep separate from hash() because this
+ *Hashes @key @value pair to @table. Keep separate from hash() because this
  * function can have infinite recursion with rehash()
  *
  *Collisions
@@ -115,10 +117,8 @@ int HashTable::rehash(){
  * ERR_MAX_TABLE_LOAD- when load factor > 75%
  * SUCCESS_HASH- when value has been added to hash table
  */
-int HashTable::hashHelper(std::string key, std::string value){
-	if(key.empty() || value.empty()){
-		return SUCCESS_HASH;
-	}
+template <typename T>
+int HashTable<T>::hashHelper(std::string key, T value){
 	if(numElems/HASH_LOAD_FACTOR > table.size()){
 		return ERR_MAX_TABLE_LOAD;
 	}
@@ -128,7 +128,7 @@ int HashTable::hashHelper(std::string key, std::string value){
 		std::cout << "hashInd: " << hashInd << " is out of bounds" << std::endl;
 		exit(0);
 	}
-	hashedObj elem = {key, value, 0};
+	hashedObj<T> elem = {key, value, 0};
 	//for empty bucket, hash object normally
 	if(table[hashInd].PSL == -1){
 		table[hashInd] = elem;
@@ -138,7 +138,7 @@ int HashTable::hashHelper(std::string key, std::string value){
 		int iter = 0;
 		while(iter < table.size() && table[hashInd].PSL != -1){
 			if(elem.PSL > table[hashInd].PSL){
-				hashedObj tmp = table[hashInd];
+				hashedObj<T> tmp = table[hashInd];
 				table[hashInd] = elem;
 				elem = tmp;
 			}
@@ -170,7 +170,8 @@ int HashTable::hashHelper(std::string key, std::string value){
  * ERR_TABLE_MAX_SIZE- (see rehash)
  * SUCCESS_HASH- element has hashed successfully
  */
-int HashTable::hash(std::string key, std::string value){
+template <typename T>
+int HashTable<T>::hash(std::string key, T value){
 	int hashRet = hashHelper(key, value);
 	//resize table if exceeding load factor, return error if not possible
 	if(hashRet == ERR_MAX_TABLE_LOAD){
@@ -184,26 +185,30 @@ int HashTable::hash(std::string key, std::string value){
 	return hashRet;
 }
 
-void HashTable::printAll(){
+template <typename T>
+void HashTable<T>::printAll(){
 	for(int i = 0; i < table.size(); i++){
 		std::cout << "[" << i << "] " << table[i].key << ":" << table[i].val <<
 			" " << table[i].PSL << std::endl;
 	}
 }
 
-void HashTable::printRange(int i, int j){
+template <typename T>
+void HashTable<T>::printRange(int i, int j){
 	for(; i <= j; i++){
 		std::cout << "[" << i << "] " << table[i].key << ":" << table[i].val <<
 			" " << table[i].PSL << std::endl;
 	}
 }
 /*Number of filled buckets in the table*/
-int HashTable::getNumElems(){
+template <typename T>
+int HashTable<T>::getNumElems(){
 	return numElems;
 }
 
 /*Total buckets in the table*/
-int HashTable::length(){
+template <typename T>
+int HashTable<T>::length(){
 	return table.size();
 }
 
@@ -217,7 +222,8 @@ int HashTable::length(){
  * int [0-table.size]- index of the item if found
  * ERR_ITEM_NOT_FOUND- item is not in the table
  */
-int HashTable::find(std::string key, std::string value){
+template <typename T>
+int HashTable<T>::find(std::string key, T value){
 	int hashInd = keygen(key);
 	int expectedPSL = 0;
 	for(; table[hashInd].PSL >= expectedPSL; expectedPSL++, hashInd++){
@@ -238,7 +244,8 @@ int HashTable::find(std::string key, std::string value){
  * ERR_ITEM_NOT_FOUND- @key, @value is not in the hash table. Table unchanged
  * SUCCESS_HASH- item has been removed from the hash table
  */
-int HashTable::erase(std::string key, std::string value){
+template <typename T>
+int HashTable<T>::erase(std::string key, T value){
 	int hashInd = keygen(key);
 	int expectedPSL = 0;
 	for(; table[hashInd].PSL >= expectedPSL; expectedPSL++, hashInd++){

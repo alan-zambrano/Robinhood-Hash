@@ -10,23 +10,25 @@
  * object's place in the table.
  *Using the following guide: https://programming.guide/robin-hood-hashing.html
  */
+template <typename T>
 struct hashedObj{
 	std::string key;
-	std::string val;
+	T val;
 	int PSL;
 };
 
+template <typename T>
 class HashTable{
 	private:
 		std::vector<int> primesList;
-		std::vector<hashedObj> table;
+		std::vector<hashedObj<T>> table;
 		std::vector<int>::iterator currSizeIter;
 		int numElems = 0;
 
-		/*hashing methods*/
+		/*Hashing methods*/
 		unsigned int keygen(std::string p);
 		int rehash();
-		int hashHelper(std::string key, std::string value);
+		int hashHelper(std::string key, T value);
 	public:
 		/*Table info*/
 		const int MAX_TABLE_SIZE = 1000000;
@@ -40,9 +42,8 @@ class HashTable{
 
 		/*Table creation*/
 		HashTable();
-		HashTable(unsigned int length);
-		int hash(std::string key, std::string value);
-
+		HashTable(size_t length);
+		int hash(std::string key, T value);
 		/*Getters*/
 		int getNumElems();
 		int length();
@@ -50,8 +51,8 @@ class HashTable{
 		/*User functions*/
 		void printAll();
 		void printRange(int i, int j);
-		int find(std::string key, std::string value);
-		int erase(std::string key, std::string value);
+		int find(std::string key, T value);
+		int erase(std::string key, T value);
 };
 
 #endif

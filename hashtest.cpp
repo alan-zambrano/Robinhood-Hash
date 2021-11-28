@@ -1,18 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <chrono> //std::chrono
-#include "hashTable.h"
+#include <chrono>       //std::chrono
+#include "hashTable.cpp"//must include .cpp because of class template
 #include <unordered_map>
 
 int main(){
-	HashTable table(512009);
+	HashTable<std::string> table(512009);
 	std::fstream fword;
 	std::string word;
 	fword.open("dictionary.txt");
 
-	/********************Robin Hood Hashing********************/
-	std::cout << "Hashing using robin hood hashing" << std::endl;
+	/*********************Robinhood Hashing*********************/
+	std::cout << "Hashing using robinhood hashing" << std::endl;
 	auto t1 = std::chrono::high_resolution_clock::now();
 	while(std::getline(fword, word, '\n')){
 		if(table.hash(word, word) != table.SUCCESS_HASH){
